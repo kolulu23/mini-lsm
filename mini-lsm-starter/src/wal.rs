@@ -17,7 +17,7 @@
 #![allow(dead_code)] // TODO(you): remove this lint after implementing this mod
 
 use std::fs::File;
-use std::io::BufWriter;
+use std::io::{BufWriter, Seek};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -31,8 +31,12 @@ pub struct Wal {
 }
 
 impl Wal {
-    pub fn create(_path: impl AsRef<Path>) -> Result<Self> {
-        unimplemented!()
+    pub fn create(path: impl AsRef<Path>) -> Result<Self> {
+        let mut file = File::options().append(true).create(true).open(path)?;
+        file.seek(std::io::SeekFrom::End(0))?;
+        Ok(Self {
+            file: Arc::new(Mutex::new(BufWriter::new(file))),
+        })
     }
 
     pub fn recover(_path: impl AsRef<Path>, _skiplist: &SkipMap<Bytes, Bytes>) -> Result<Self> {
